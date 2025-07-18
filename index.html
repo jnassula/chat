@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Chat Interface</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #121212; /* Dark background for a futuristic look */
+            min-height: 100vh; /* Use min-height to ensure it covers the whole screen */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            color: #fff; /* Default text color to white */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px; /* Add some padding around the content */
+        }
+        
+        /* Chat trigger icon */
+        .chat-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px; /* Adjusted size for better responsiveness */
+            height: 60px;
+            background-image: url('https://cdn2.iconfinder.com/data/icons/chatbot-vol-2/512/bot-virtual-chatbot-face-chat-chatting-robot-3d.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .chat-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Chat container */
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 90%; /* Adjust width for smaller screens */
+            max-width: 380px; /* Maximum width */
+            height: 80vh; /* Adjust height for smaller screens */
+            max-height: 550px; /* Maximum height */
+            background-color: #1e1e1e; /* Dark background */
+            border-radius: 15px; /* More rounded corners */
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0);
+            transform-origin: bottom right;
+            transition: transform 0.3s ease;
+            border: 2px solid #009C76; /* Neon green border */
+        }
+        
+        .chat-container.active {
+            transform: scale(1);
+        }
+        
+        /* Chat header */
+        .chat-header {
+            background: linear-gradient(to right, #009C76, #f2f0f0); /* Gradient background */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+        }
+        
+        .chat-title-container {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between logo and title */
+        }
+        
+        .chat-logo {
+            width: 30px; /* Adjust logo size */
+            height: 30px;
+            background-image: url('https://nossafarmacia.vtexassets.com/assets/vtex.file-manager-graphql/images/f6817d06-68bd-4011-8d1e-25e295551053___986f4d21c95ce1290ac59fc7d6bac448.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 50%; /* Make it circular */
+        }
+        
+        .chat-title {
+            font-weight: 500;
+            font-size: 18px; /* Slightly larger title */
+        }
+        
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px; /* Slightly larger close button */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .close-chat:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Chat messages area */
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Increased gap */
+            color: #ddd; /* Lighter text for messages */
+            background-color: #f2f0f0; /* Dark background for messages */
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 18px; /* Adjusted padding */
+            border-radius: 22px; /* More rounded messages */
+            font-size: 15px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease;
+            word-break: break-word; /* Prevent long words from breaking layout */
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background-color: #2c2c2c; /* Darker user message */
+            color: #fff;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message.support {
+            background-color: #009C76; /* Neon green support message */
+            color: #000; /* Dark text on neon green */
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        /* Chat input area */
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+            display: flex;
+            gap: 10px;
+            background-color: #009C76; /* Dark background */
+        }
+        
+        .chat-input {
+            flex: 1;
+            border: 1px solid #009C76; /* Neon green border */
+            border-radius: 25px; /* More rounded input */
+            padding: 12px 18px; /* Adjusted padding */
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+            background-color: #f2f0f0; /* Dark input background */
+            color: #fff; /* White text */
+        }
+        
+        .chat-input:focus {
+            border-color: #009C76; /* Brighter neon green on focus */
+        }
+        
+        .send-button {
+            background-color: #4CAF50; /* Neon green */
+            color: #000; /* Dark text */
+            border: none;
+            border-radius: 50%;
+            width: 42px; /* Slightly larger button */
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .send-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        }
+        
+        .send-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* Scrollbar styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px; /* Wider scrollbar */
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: #252525; /* Dark scrollbar track */
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #4CAF50; /* Neon green scrollbar thumb */
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #69F0AE; /* Brighter neon green on hover */
+        }
+        
+        /* Media query for smaller screens */
+        @media (max-width: 600px) {
+            .chat-container {
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                width: 100%; /* Full width on small screens */
+                max-width: none; /* Remove max-width */
+                height: 90vh; /* Adjust height */
+                max-height: none; /* Remove max-height */
+                border-radius: 0; /* No rounded corners on small screens */
+                box-shadow: none; /* Remove shadow */
+            }
+            
+            .chat-icon {
+                bottom: 10px;
+                right: 10px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Chat trigger icon -->
+    <div class="chat-icon" id="chatIcon"></div>
+    
+    <!-- Chat container -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="chat-title-container">
+                <div class="chat-logo"></div>
+                <div class="chat-title">Support Chat</div>
+            </div>
+            <button class="close-chat" id="closeChat">×</button>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message user">Hello! How can I help you today?</div>
+            <div class="message support">I have a question about your services.</div>
+        </div>
+        
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+            <button class="send-button" id="sendButton">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const chatIcon = document.getElementById('chatIcon');
+        const chatContainer = document.getElementById('chatContainer');
+        const closeChat = document.getElementById('closeChat');
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendButton');
+        const chatMessages = document.getElementById('chatMessages');
+        
+        // Open chat
+        chatIcon.addEventListener('click', () => {
+            chatContainer.classList.add('active');
+            chatIcon.style.display = 'none'; // Hide the chat icon
+            chatInput.focus();
+        });
+        
+        // Close chat
+        closeChat.addEventListener('click', () => {
+            chatContainer.classList.remove('active');
+            chatIcon.style.display = 'block'; // Show the chat icon
+        });
+        
+        // Send message
+        function sendMessage() {
+            const messageText = chatInput.value.trim();
+            if (messageText) {
+                // Create user message
+                const userMessage = document.createElement('div');
+                userMessage.classList.add('message', 'support');
+                userMessage.textContent = messageText;
+                chatMessages.appendChild(userMessage);
+                
+                // Clear input
+                chatInput.value = '';
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Simulate response after a short delay
+                setTimeout(() => {
+                    const responses = [
+                        "Thanks for your message! How else can I help?",
+                        "I understand. Let me check that for you.",
+                        "Interesting question! Let me find the answer.",
+                        "Could you provide more details about that?",
+                        "I'm looking into this right now."
+                    ];
+                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                    
+                    const supportMessage = document.createElement('div');
+                    supportMessage.classList.add('message', 'user');
+                    supportMessage.textContent = randomResponse;
+                    chatMessages.appendChild(supportMessage);
+                    
+                    // Scroll to bottom again
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+            }
+        }
+        
+        // Send button click
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Enter key press
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
